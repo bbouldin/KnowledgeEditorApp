@@ -1,0 +1,65 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/*
+    Created on : Sep 10, 2014, 10:17:55 AM
+    Author     : vijay
+*/
+div.text {
+// background-color: lightblue;
+    background: -webkit-linear-gradient(left top, #6699ff , white); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(bottom right, #6699ff, white); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(bottom right, #6699ff, white); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(to bottom right, #6699ff , white); /* Standard syntax (must be last) */
+//width: 300px;
+    padding: 2px;
+    border: 1px solid #3366ff;
+    margin: 2px;
+    border-radius: 5px;
+}
+
+div.sent {
+    background-color: #F0F0F0;
+//width: 280px;
+    padding: 2px;
+// border: 1px solid black;
+    margin: 2px;
+    border-radius: 5px;
+    overflow-x:scroll;
+}
+
+div.ke_comb {
+// background-color: lightgrey;
+    background: -webkit-linear-gradient(left top, white, #B2D1FF); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(bottom right, white, #B2D1FF); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(bottom right, white, #B2D1FF); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(to bottom right, white, #B2D1FF); /* Standard syntax (must be last) */
+
+//width: 260px;
+    padding: 2px;
+    border: 1px solid #B2D1FF;
+    margin: 2px;
+    border-radius: 5px;
+}
+
+div.all_text {
+// background-color: lightgrey;
+    background: -webkit-linear-gradient(left top, white, lightgrey); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(bottom right, white, lightgrey); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(bottom right, white, lightgrey); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(to bottom right, white, lightgrey); /* Standard syntax (must be last) */
+
+//width: 320px;
+    padding: 2px;
+    border: 1px solid grey;
+    margin: 2px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+div.container {
+    width: 100%;
+
+}
