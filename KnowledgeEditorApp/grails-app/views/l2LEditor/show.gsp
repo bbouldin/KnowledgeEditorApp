@@ -91,7 +91,7 @@
                                                         ${aKETerm}
                                                     </td>
                                                     <td style="width:380px">
-                                                        ${aKETerm.getkboData().get("constantName")}
+                                                        ${aKETerm.getSboData().get("constantName")}
                                                     </td>
                                                 </tr>
                                             </table>

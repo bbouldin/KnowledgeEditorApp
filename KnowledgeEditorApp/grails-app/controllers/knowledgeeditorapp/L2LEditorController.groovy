@@ -4,6 +4,8 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP
 import edu.stanford.nlp.trees.Tree
 import groovy.util.logging.Log4j
 import me.aatma.languagetologic.BuildKBNLGraph
+import me.aatma.languagetologic.CleanAndCombineGraph
+import me.aatma.languagetologic.SemanticCombination
 import me.aatma.languagetologic.TextAnalyzer
 import me.aatma.languagetologic.graph.nodes.KBNLNodeCloud
 import me.aatma.library.qapi.SQuery
@@ -26,84 +28,6 @@ import me.aatma.library.stanfordcorenlputils.Article
 import org.apache.jena.query.ReadWrite
 
 class L2LEditorController {
-
-//    def beforeInterceptor = {
-//
-//        SObjectImpl.getDataset().begin(ReadWrite.WRITE);
-//
-//        String userAboutNs = Constants.ABOX_PART + "User/About/" + "xyz123" + "#";
-//        Context userAboutCtx = new ContextImpl(userAboutNs);
-//
-//        String userDiet = Constants.ABOX_PART + "User/Diet/" + "xyz123" + "#";
-//        Context userDietCtx = new ContextImpl(userDiet);
-//
-//        SIndividual vijay = new SIndividualImpl(userAboutNs + "VijayRaj", userAboutCtx);
-//
-//        // Operations are always transcripted, if the transcript location is specified
-//        // currently hardcoded
-//        SAPIConfiguration.setCurrentUserContext(userDietCtx);
-//        SAPIConfiguration.setCurrentUser(vijay);
-//
-//        if (session["analyzed_texts"] == null) {
-//            session["analyzed_texts"] = new ArrayList<TextAnalyzer>();
-//        }
-//    }
-//
-//    def afterInterceptor = {
-//        SObjectImpl.getDataset().commit();
-//        SObjectImpl.getDataset().end();
-//    }
-
-    def testCoreNLP() {
-//        Properties props = new Properties();
-//        // String modPath = "/scratch/WORK2/NL/stanford-corenlp/stanford-corenlp-full-2014-06-16/models3.4/edu/stanford/nlp/models/";
-//
-//        //String modPath = "C:\\Work\\StanfordNLP\\stanford-corenlp-full-2014-06-16\\models3.4\\edu\\stanford\\nlp\\models\\";
-//        String modPath = "/Users/vkantharaj/workspace/aatma-me/ModelsFromJar/edu/stanford/nlp/models/";
-//
-//        props.put("pos.model", modPath + "pos-tagger/english-left3words/english-left3words-distsim.tagger");
-//        //props.put("ner.model", modPath + "ner/english.all.3class.distsim.crf.ser.gz");
-//        props.put("ner.model", modPath + "ner/english.all.3class.distsim.crf.ser.gz," + modPath + "ner/english.conll.4class.distsim.crf.ser.gz," + modPath + "ner/english.muc.7class.distsim.crf.ser.gz");
-//        props.put("parse.model", modPath + "lexparser/englishPCFG.ser.gz");
-//        props.put("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
-//        props.put("sutime.binders","0");
-//        props.put("sutime.rules", modPath + "sutime/defs.sutime.txt," + modPath + "sutime/english.sutime.txt");
-////    props.put("sutime.markTimeRanges", "true");
-////    props.put("sutime.includeRange", "true");
-////    props.put("sutime.includeNested", "true");
-//        props.put("dcoref.demonym", modPath + "dcoref/demonyms.txt");
-//        props.put("dcoref.states", modPath + "dcoref/state-abbreviations.txt");
-//        props.put("dcoref.animate", modPath + "dcoref/animate.unigrams.txt");
-//        props.put("dcoref.inanimate", modPath + "dcoref/inanimate.unigrams.txt");
-//        //props.put("dcoref.big.gender.number", modPath + "dcoref/gender.data.gz");
-//        props.put("dcoref.big.gender.number", modPath + "dcoref/gender.map.ser.gz");
-//        props.put("dcoref.countries", modPath + "dcoref/countries");
-//        props.put("dcoref.states.provinces", modPath + "dcoref/statesandprovinces");
-//        props.put("dcoref.singleton.model", modPath + "dcoref/singleton.predictor.ser");
-
-//    props.put("tokenize.options", "invertible,ptb3Escaping=true");
-//    Properties propsTime = new Properties();
-//    propsTime.setProperty("sutime.markTimeRanges", "true");
-//    propsTime.setProperty("sutime.includeRange", "true");
-//    TimeAnnotator sutime = new  TimeAnnotator("sutime", propsTime);
-
-        // The following nset of annotators generates a different parse tree than one where
-        // POS is used.
-        // https://mailman.stanford.edu/pipermail/java-nlp-user/2011-August/001283.html
-        // The above link explains the reason for the behavior.
-        // But we use lemma and want to use dcoref (which depends on ner->lemma->POS
-        // So we have to live with the parse, till Stanford folks fix it.
-        // If we really want to get past this, we need to have two pipelines, and merge
-        // the results ourselves, for lemma and dcoref.
-        // props.put("annotators", "tokenize, ssplit, parse");
-
-
-        Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, parse, pos, lemma, ner");
-        def pipeline = new StanfordCoreNLP(props, false);
-        System.out.println("Done loading");
-        render ('done')
-    }
 
     def index() {
         String userAboutNs = Constants.ABOX_PART + "User/About/" + "xyz123" + "#";
@@ -225,14 +149,15 @@ class L2LEditorController {
         for (item in params.list("items")) {
             def indices = item.split(',')
             def aText = session["analyzed_texts"][indices[0].toInteger()];
-            def aTextSentKE = aText.getPotentialKE().get(indices[1].toInteger());
-            def aKEComb = aTextSentKE.getCombinations().get(indices[2].toInteger());
+            CleanAndCombineGraph aTextSentKE = aText.getPotentialKE().get(indices[1].toInteger());
+            SemanticCombination aKEComb = aTextSentKE.getCombinations().get(indices[2].toInteger());
             Sentence aKESent = aKEComb.getSentences().get(indices[3].toInteger())
             ruleOrSQueryPosLits.add(aKESent);
 
 
             for (STerm t : aKESent.getListOfTypedVariables()) {
-                ruleOrSQueryPosLits.add(t.getRestriction());
+                // TODO: support getRestriction to add rules
+//                ruleOrSQueryPosLits.add(t.getRestriction());
             }
 
             if (params.kbInteraction == "Assert") {
@@ -247,7 +172,8 @@ class L2LEditorController {
                 }
                 log.info 'Reified terms: ' + reifiedTerms
                 Sentence aKESentMod = aKESent.replaceTerms(terms, reifiedTerms);
-                Context assertCtx = Constants.uvMt(); // This should be the user context
+//                Context assertCtx = Constants.uvMt(); // This should be the user context
+                Context assertCtx = SAPIConfiguration.getCurrentUserContext();
                 // later assert in temporary user context, per conversation.
                 // "ConversationalUserContext"
                 // The user context should have a time stamp property
@@ -258,6 +184,7 @@ class L2LEditorController {
                 Assertion sentAssertion = aKESentMod.assertIn(assertCtx)
                 String parsedString = aTextSentKE.getBuildKBNLGraph().getSentenceString()
                 log.info 'Parsed sentence: ' + parsedString;
+                // TODO: Enable creationString predicate. For bookkeeping assertion origin
 //        FactImpl.findOrCreate(new SentenceImpl(KBPredicateImpl.get("creationSentence"), sentAssertion, parsedString), ContextImpl.get("BookkeepingMt"))
             }
         }
