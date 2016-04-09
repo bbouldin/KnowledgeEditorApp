@@ -112,7 +112,19 @@
     <div class="all_text">
         Query Results:
         <g:if test="${resSet != null}">
-            ${resSet}
+            <table>
+                <tr>
+                    <g:each var="varName" in="${resSet.getResultVars()}">
+                        <td>${varName}</td>
+                    </g:each>
+                </tr>
+            </table>
+            <g:while test="${resSet.hasNext()}">
+                <g:set var="qSol" value="${resSet.next()}" />
+                <g:each var="varName" in="${resSet.getResultVars()}">
+                    <td>${qSol.get(varName)}</td>
+                </g:each>
+            </g:while>
         </g:if>
     </div>
 

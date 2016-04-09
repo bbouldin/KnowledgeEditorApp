@@ -8,8 +8,11 @@ import me.aatma.languagetologic.CleanAndCombineGraph
 import me.aatma.languagetologic.SemanticCombination
 import me.aatma.languagetologic.TextAnalyzer
 import me.aatma.languagetologic.graph.nodes.KBNLNodeCloud
+import me.aatma.library.qapi.QueryAnswer
 import me.aatma.library.qapi.SQuery
+import me.aatma.library.qapi.SQueryBuilder
 import me.aatma.library.qapi.SResultSet
+import me.aatma.library.qapi.jenaclient.SQueryBuilderImpl
 import me.aatma.library.qapi.jenaclient.SQueryImpl
 import me.aatma.library.sapi.Assertion
 import me.aatma.library.sapi.Context
@@ -25,7 +28,9 @@ import me.aatma.library.sapi.jenasclient.SObjectImpl
 import me.aatma.library.sapi.jenasclient.SRuleImpl
 import me.aatma.library.sapi.jenasclient.SentenceImpl
 import me.aatma.library.stanfordcorenlputils.Article
+import org.apache.jena.query.QuerySolution
 import org.apache.jena.query.ReadWrite
+import org.apache.jena.query.ResultSet
 
 class L2LEditorController {
 
@@ -145,7 +150,7 @@ class L2LEditorController {
         log.info ("We got these params: " + params);
         List<Sentence> ruleOrSQueryPosLits = new ArrayList<Sentence>();
         List<Sentence> ruleOrSQueryNegLits = new ArrayList<Sentence>();
-        SResultSet resSet = null;
+//        SResultSet resSet = null;
         for (item in params.list("items")) {
             def indices = item.split(',')
             def aText = session["analyzed_texts"][indices[0].toInteger()];
@@ -198,19 +203,33 @@ class L2LEditorController {
             ruleOrSQueryNegLits.add(aKESent);
         }
 
-        if (params.kbInteraction == "SQuery") {
-            Sentence SQuerySent = SentenceImpl.and(ruleOrSQueryPosLits);
-            log.info("SQuery sentence: " + SQuerySent);
-            SQuery q = new SQueryImpl(SQuerySent, Constants.inferencePSCMt());
+        if (params.kbInteraction == "Query") {
+            // Currently we only support conjunction of sentences
+            SQueryBuilder sqb = new SQueryBuilderImpl();
+            sqb.addConjuctionOfSentences(ruleOrSQueryPosLits);
+            sqb.addSelectAllVariables();
+            String queryStr = sqb.getQueryString();
+
+//            Sentence SQuerySent = SentenceImpl.and(ruleOrSQueryPosLits);
+            Context qCtx = SAPIConfiguration.getCurrentUserContext();
+            System.out.println("SQuery sentence: " + queryStr);
+            log.info("SQuery context: " + qCtx);
+            SQuery q = new SQueryImpl(queryStr);
 //      q.setInferenceMode(OpenCycInferenceMode.MINIMAL_MODE);
 //      q.performInference();
 //      resSet = q.getResultSet();
-            resSet = q.execute()
-            log.info("Results: " + resSet);
+
+            ResultSet resSet = q.executeRetJenaRS(SAPIConfiguration.getCurrentUserContext());
+//            while (resSet.hasNext()) {
+//                QuerySolution qs = resSet.next();
+//                System.out.println("Query Solution: " + qs);
+//
+//            }
+//            log.info("Results: " + resSet);
 
             render (view: "show", model:['resSet':resSet])
         } else {
-            if (params.kbInteraction == "Assert SRule") {
+            if (params.kbInteraction == "Assert Rule") {
                 log.info("PosLits: " + ruleOrSQueryPosLits);
                 log.info("NegLits: " + ruleOrSQueryNegLits);
                 if (ruleOrSQueryNegLits.size() == 1) {
